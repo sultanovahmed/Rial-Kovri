@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="ru"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>РИАЛ КОВРЫ</title><link rel="stylesheet" href="shop.css"></head>
+<body>
+<div class="Header"><header>
+  <div><a href="index.html" style="text-decoration:none;color:#fff;margin:0"><h1>РИАЛ КОВРЫ</h1></a><p>Магазин</p></div>
+  <div class="hbtns">
+    <button class="ibtn" id="cartBtn">🛒<span class="badge" id="cartCount">0</span></button>
+  </div>
+</header></div>
+
+<div class="search"><input id="q" type="search" placeholder="Поиск: например «серый турция шерсть»"></div>
+<div class="dropboxes" id="filters"></div>
+
+<main><div id="empty" class="empty" hidden>Данных ковров пока что нет. Но у нас есть множество других!</div>
+<div id="cardsContainer"></div></main>
+
+<!-- Модальное окно товара -->
+<div id="productModal" class="overlay"><div class="modal">
+  <button class="close" id="closeModal">X</button>
+  <div class="grayBack"><button class="lrBtn" id="prev">←</button><img id="gImg" alt=""><button class="lrBtn" id="next">→</button></div>
+  <div class="texts"><h1 id="mTitle"></h1><div class="tag">Характеристики</div>
+    <div class="despretion" id="mSpecs"></div><p class="Cost" id="mPrice"></p>
+    <button class="Buy" id="mBuy">Добавить в корзину</button></div>
+</div></div>
+
+<!-- Корзина -->
+<aside class="drawer" id="drawer">
+  <div style="display:flex;justify-content:space-between;align-items:center"><h2>Корзина</h2><button class="btn gray" id="closeCart">✕</button></div>
+  <div class="list" id="cartList"></div>
+  <p class="Cost" id="cartTotal"></p>
+  <button class="btn" id="clearCart">Очистить</button>
+</aside>
+
+<div class="alert hidden" id="alertBox"></div>
+
+<script src="common.js"></script>
+<script>
+const $=id=>document.getElementById(id);
+let products=[],cur=null,idx=0;
+const DB={get(k,d){try{return JSON.parse(localStorage.getItem(k))??d}catch{return d}},set(k,v){localStorage.setItem(k,JSON.stringify(v))}};
+let cart=DB.get('cart',[]);            // [{id,count}] — хранится в браузере
+const state={q:'',sort:'pop',size:'all',made:'all',color:'all',pattern:'all'};
+
+function saveCart(){DB.set('cart',cart);renderCart()}
+/* ---------- фильтры ---------- */
+const uniq=a=>[...new Set(a)].sort();
+function buildFilters(){
+  const sel=(k,label,opts)=>`<div><label class="dropbox-label">${label}</label><select class="dropbox" data-k="${k}"><option value="all">все</option>${opts.map(o=>`<option value="${esc(o[0])}" ${state[k]===o[0]?'selected':''}>${esc(o[1])}</option>`).join('')}</select></div>`;
+  const d=x=>[x,x];
+  $('filters').innerHTML=
+    sel('size','Размер',uniq(products.map(sizeOf)).map(d))+
+    sel('made','Производство',uniq(products.map(p=>p.made)).map(d))+
+    sel('color','Расцветка',uniq(products.map(p=>p.color)).map(d))+
+    sel('pattern','Узор',[['yes','есть'],['no','нет']])+
+    `<div><label class="dropbox-label">Сортировка</label><select class="dropbox" data-k="sort">
+      <option value="pop" ${state.sort==='pop'?'selected':''}>Популярные</option>
+      <option value="asc" ${state.sort==='asc'?'selected':''}>Сначала дешевле</option>
+      <option value="desc" ${state.sort==='desc'?'selected':''}>Сначала дороже</option></select></div>
+    <div style="align-self:end"><button class="btn light" id="reset">Сбросить</button></div>`;
+  document.querySelectorAll('[data-k]').forEach(s=>s.onchange=()=>{state[s.dataset.k]=s.value;render()});
+  $('reset').onclick=()=>{Object.assign(state,{q:'',sort:'pop',size:'all',made:'all',color:'all',pattern:'all'});$('q').value='';buildFilters();render()};
+}
+
+/* ---------- поиск: слова из запроса ищутся по названию и характеристикам ---------- */
+function score(p,words){
+  const hay=(p.title+' '+sizeOf(p)+' '+p.width+' '+p.length+' '+p.made+' '+p.color+' '+p.materials+' '+p.density+' '+(p.pattern?'узор с узором':'без узора')).toLowerCase();
+  return words.reduce((s,w)=>s+(hay.includes(w)?(p.title.toLowerCase().includes(w)?2:1):0),0);
+}
+function visible(){
+  const words=state.q.toLowerCase().split(/\s+/).filter(Boolean);
+  let list=products.filter(p=>
+    (state.size==='all'||sizeOf(p)===state.size)&&(state.made==='all'||p.made===state.made)&&
+    (state.color==='all'||p.color===state.color)&&(state.pattern==='all'||(state.pattern==='yes')===!!p.pattern))
+    .map(p=>({p,s:words.length?score(p,words):0}));
+  if(words.length)list=list.filter(x=>x.s>0);
+  const by={pop:(a,b)=>(b.p.sales||0)-(a.p.sales||0),asc:(a,b)=>a.p.price-b.p.price,desc:(a,b)=>b.p.price-a.p.price}[state.sort];
+  return list.sort((a,b)=>(b.s-a.s)||by(a,b)).map(x=>x.p);  // сначала самые подходящие, затем по выбранной сортировке
+}
+function render(){
+  const list=visible();
+  $('cardsContainer').innerHTML=list.map(p=>`<div class="card" data-id="${p.id}">
+    <img src="${p.image}" loading="lazy" alt=""><h2 class="title">${esc(p.title)}</h2><p class="price">${fmt(p.price)}₽</p>
+    <button class="btn" data-add="${p.id}">В корзину</button></div>`).join('');
+  $('empty').hidden=list.length>0;
+}
+$('cardsContainer').onclick=e=>{
+  const add=e.target.closest('[data-add]');if(add)return addToCart(add.dataset.add);
+  const c=e.target.closest('.card');if(c)openModal(c.dataset.id);
+};
+$('q').oninput=e=>{state.q=e.target.value;render()};
+
+/* ---------- модальное окно ---------- */
+const imgs=()=>[cur.image,...(cur.images||[])];
+function openModal(id){
+  cur=products.find(p=>p.id===id);idx=0;
+  $('mTitle').textContent=cur.title;
+  $('mSpecs').innerHTML=specs(cur).map(([l,v])=>`<div><span>${l}</span><b>${esc(v)}</b></div>`).join('');
+  $('mPrice').textContent=`Цена: ${fmt(cur.price)}₽`;showImg();
+  $('mBuy').onclick=()=>addToCart(cur.id);productModal.classList.add('open');document.body.style.overflow='hidden';
+}
+function closeModal(){productModal.classList.remove('open');document.body.style.overflow=''}
+function showImg(){const a=imgs();$('gImg').src=a[idx];$('prev').style.visibility=$('next').style.visibility=a.length>1?'visible':'hidden'}
+$('next').onclick=()=>{idx=(idx+1)%imgs().length;showImg()};
+$('prev').onclick=()=>{idx=(idx-1+imgs().length)%imgs().length;showImg()};
+$('closeModal').onclick=closeModal;
+productModal.onclick=e=>{if(e.target===productModal)closeModal()};
+document.onkeydown=e=>{if(e.key==='Escape'){closeModal();drawer.classList.remove('open')}
+  if(productModal.classList.contains('open')){if(e.key==='ArrowRight')$('next').click();if(e.key==='ArrowLeft')$('prev').click()}};
+
+/* ---------- корзина ---------- */
+function addToCart(id){
+  const it=cart.find(x=>x.id===id);it?it.count++:cart.push({id,count:1});saveCart();toast('Товар добавлен в корзину');
+}
+function renderCart(){
+  cart=cart.filter(x=>products.some(p=>p.id===x.id));   // удалённые админом товары пропадают
+  let total=0,n=0;
+  $('cartList').innerHTML=cart.length?cart.map(x=>{const p=products.find(p=>p.id===x.id);total+=p.price*x.count;n+=x.count;
+    return `<div class="row"><img src="${p.image}" loading="lazy" alt=""><div class="n">${esc(p.title)}<br><small>${fmt(p.price)}₽</small></div>
+    <div class="qty"><button data-d="-1" data-id="${x.id}">−</button> ${x.count} <button data-d="1" data-id="${x.id}">+</button></div></div>`}).join(''):'<p>Корзина пуста</p>';
+  $('cartTotal').textContent=`Итого: ${fmt(total)}₽`;$('cartCount').textContent=n;
+}
+$('cartList').onclick=e=>{const b=e.target.closest('[data-d]');if(!b)return;
+  const it=cart.find(x=>x.id===b.dataset.id);it.count+=+b.dataset.d;if(it.count<1)cart=cart.filter(x=>x!==it);saveCart()};
+$('cartBtn').onclick=()=>drawer.classList.add('open');
+$('closeCart').onclick=()=>drawer.classList.remove('open');
+$('clearCart').onclick=()=>{cart=[];saveCart()};
+function toast(t){const a=$('alertBox');a.textContent=t;a.classList.remove('hidden');clearTimeout(toast.t);toast.t=setTimeout(()=>a.classList.add('hidden'),2500)}
+
+async function load(){
+  try{products=await (await fetch('data/products.json?t='+Date.now())).json();buildFilters();render();renderCart()}
+  catch{$('empty').textContent='Не удалось загрузить каталог. Попробуйте обновить страницу.';$('empty').hidden=false}
+}
+load();document.addEventListener('visibilitychange',()=>{if(!document.hidden)load()});
+</script></body></html>
