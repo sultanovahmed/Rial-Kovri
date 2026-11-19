@@ -1,0 +1,142 @@
+@import url('https://fonts.googleapis.com/css2?family=M+PLUS+1p:wght@400;700;900&family=Roboto+Slab:wght@100..900&display=swap');
+
+*{ margin: 0; box-sizing: border-box; }
+html{ scroll-behavior: smooth; scroll-padding-top: 80px; }
+body{
+    background-image: url(Background.png);
+    background-color: #E9967A;
+    background-size: cover;
+    background-attachment: fixed;
+    font-family: "Roboto Slab", serif;
+}
+
+/* шапка */
+header{
+    position: fixed;
+    top: 0;
+    z-index: 1000;
+    width: 100%;
+    padding: 10px 5%;
+    background-color: #FFA07A;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 6px 20px;
+    box-shadow: 0 2px 8px rgba(0,0,0,.2);
+}
+#name{
+    color: darkred;
+    font-family: "M PLUS 1p", sans-serif;
+    font-weight: 900;
+    font-size: 25px;
+}
+nav{ display: flex; flex-wrap: wrap; gap: 4px 6px; }
+a{ text-decoration: none; color: black; }
+nav a{ padding: 6px 12px; border-radius: 8px; transition: .2s; }
+nav a:hover{ background: #E9967A; }
+nav .nav-shop{ background: darkred; color: #fff; }
+nav .nav-shop:hover{ background: #a00000; }
+
+/* кнопки */
+.button{
+    display: inline-block;
+    margin-top: 20px;
+    padding: 12px 28px;
+    background: #FFA07A;
+    color: darkred;
+    font: 700 20px "M PLUS 1p", sans-serif;
+    border: 4px darkred dashed;
+    transition: .2s;
+}
+.button:hover{ background: #fff; transform: translateY(-3px); }
+.button.dark{ background: darkred; color: #fff; border-color: #FFA07A; }
+.button.dark:hover{ background: #a00000; }
+
+/* баннер */
+.banner{ padding: 22vh 5% 12vh; font-size: 30px; }
+#start{
+    display: inline-block;
+    padding: 20px 30px;
+    border: 6px #E9967A dashed;
+    background: rgba(255,160,122,.55);
+}
+.start{ color: darkred; font-family: "M PLUS 1p", sans-serif; }
+h1.start{ font-size: clamp(30px, 5vw, 56px); }
+
+/* блок о нас */
+.post{
+    background-color: #E9967A;
+    padding: 40px 5%;
+    text-align: center;
+    border: 6px darkred dashed;
+    margin: 60px 0;
+}
+.post h2{ color: darkred; font-family: "M PLUS 1p", sans-serif; font-size: 34px; margin-bottom: 16px; }
+.post p{ max-width: 800px; margin: 0 auto; font-size: clamp(20px, 2.5vw, 28px); line-height: 1.5; }
+
+/* заголовки секций */
+.title-box{
+    color: darkred;
+    font-family: "M PLUS 1p", sans-serif;
+    text-align: center;
+    margin: 0 auto 40px;
+    border: 3px #E9967A dashed;
+    background-color: #FFA07A;
+    width: fit-content;
+    padding: 6px 30px;
+}
+
+/* преимущества */
+#why{ padding: 0 5%; margin-bottom: 80px; }
+.cards{ display: flex; flex-wrap: wrap; justify-content: center; gap: 24px; }
+.card{
+    width: 280px;
+    padding: 24px;
+    text-align: center;
+    background: #E9967A;
+    border: 4px darkred dotted;
+    transition: transform .2s;
+}
+.card:hover{ transform: translateY(-6px); }
+.card span{ font-size: 44px; }
+.card h3{ color: darkred; font-family: "M PLUS 1p", sans-serif; margin: 10px 0 6px; }
+
+/* магазины */
+#shops{ padding: 0 5%; margin-bottom: 80px; }
+.MapsObolochka{ display: flex; flex-wrap: wrap; justify-content: center; gap: 30px; }
+.MainMap{
+    width: 460px;
+    max-width: 100%;
+    padding: 20px;
+    border: 4px darkred dotted;
+    background-color: #E9967A;
+}
+.MainMap iframe{ width: 100%; height: 250px; border: 1px solid #000; display: block; }
+.MainMap>p{
+    color: darkred;
+    font-size: 20px;
+    font-weight: 700;
+    font-family: "M PLUS 1p", sans-serif;
+    margin: 12px 0;
+}
+#whats{ width: 20px; height: 20px; }
+.whats{
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 10px;
+    border: 2px darkred dashed;
+    background-color: salmon;
+}
+.whats:hover{ background: #fff; }
+
+footer{ background-color: black; padding: 14px 0; text-align: center; color: #fff; }
+
+@media (max-width: 600px){
+    header{ justify-content: center; }
+    #name{ font-size: 22px; }
+    nav a{ padding: 5px 8px; font-size: 14px; }
+    .banner{ padding-top: 24vh; }
+    .post{ margin: 40px 0; }
+}
