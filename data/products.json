@@ -1,1 +1,21 @@
-[]
+[
+ {
+  "id": "p1795091825432",
+  "title": "Туркцкий ковёр 2 на 3",
+  "width": "2",
+  "length": "3",
+  "made": "Турция",
+  "color": "Белый",
+  "materials": "хлопок",
+  "density": 2000000,
+  "price": 10000,
+  "pattern": true,
+  "sales": 0,
+  "image": "images/mwnjbbnechbc.jpg",
+  "images": [
+   "images/mwnjbesvv8zi.jpg",
+   "images/mwnjbjcgpuri.jpg",
+   "images/mwnjbmq9u5mb.jpg"
+  ]
+ }
+]
