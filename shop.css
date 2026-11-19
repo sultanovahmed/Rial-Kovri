@@ -70,3 +70,53 @@ td img{width:40px;height:50px;object-fit:cover;border-radius:4px}
 .tag{font-size:18px;padding:12px}.Buy{height:64px;font-size:24px}
 @media(max-width:760px){.modal{min-height:0;margin:1vh auto}.grayBack{min-height:0}.texts{padding:20px}.texts h1{font-size:26px}.despretion{font-size:15px}.Cost{font-size:22px}}
 .login{display:flex;flex-direction:column;gap:10px;width:min(380px,92%);margin:12vh auto}
+
+/* ===== Адаптивность: телефоны, планшеты, ноутбуки, большие экраны ===== */
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
+body{overflow-x:hidden;padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-right);padding-bottom:env(safe-area-inset-bottom)}
+img{max-width:100%}
+input,select,textarea,.field,.dropbox{font-size:16px}               /* iOS не приближает страницу при вводе */
+button,.btn,.Buy,.ibtn{touch-action:manipulation}
+.Header{padding-top:max(8px,env(safe-area-inset-top))}
+.alert{top:max(20px,env(safe-area-inset-top));max-width:92%;text-align:center}
+.drawer{height:100vh;padding-bottom:max(18px,env(safe-area-inset-bottom))}
+@supports(height:100dvh){.drawer{height:100dvh}.modal,.grayBack{min-height:92dvh}}
+@media(pointer:coarse){button,.btn,.Buy,.ibtn,.qty button{min-height:44px;min-width:44px}.qty button{min-width:36px;min-height:36px}}
+@media(hover:none){.card:hover{transform:none;box-shadow:0 4px 10px rgba(0,0,0,.1)}.ibtn:hover{transform:none}}
+@media(min-width:1500px){#cardsContainer{max-width:1500px;margin:0 auto}}
+
+/* планшеты */
+@media(max-width:1024px){
+  .grayBack img{max-width:420px}
+  .texts{padding:28px}.texts h1{font-size:32px}.despretion{font-size:17px}
+}
+/* телефоны */
+@media(max-width:760px){
+  header{width:94%;padding:12px 14px}header h1{font-size:19px}header p{font-size:14px}
+  .search input{width:94%}
+  .dropboxes{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 3%}
+  .dropbox{width:100%}#reset{width:100%}
+  .modal{width:100%;margin:0;border-radius:0;min-height:100vh}
+  @supports(height:100dvh){.modal{min-height:100dvh}}
+  .grayBack{border-radius:0;padding:56px 8px 20px;min-height:0}
+  .grayBack img{max-width:260px}
+  .texts{padding:18px 16px 28px}.texts h1{padding-right:0;font-size:24px}
+  .Buy{height:54px;font-size:19px}
+  #productModal .close{position:fixed;top:max(10px,env(safe-area-inset-top));right:10px}
+  .lrBtn{height:40px;width:40px}
+}
+@media(max-width:520px){
+  #cardsContainer{padding:4px}
+  .card{width:calc(50% - 16px);margin:8px;padding:10px}
+  .card img{width:100%;height:auto;aspect-ratio:3/4}
+  .title{font-size:15px}.card .btn{padding:8px 10px;font-size:13px;width:100%}
+  .row{flex-wrap:wrap}
+  .box{padding:18px}
+}
+@media(max-width:360px){.dropboxes{grid-template-columns:1fr}}
+/* телефон лёжа */
+@media(max-height:500px) and (orientation:landscape){.grayBack img{max-width:200px}.modal{margin:0 auto}}
+/* админка */
+.wrap{width:min(1000px,96%)}
+@media(max-width:600px){.panel{padding:14px}.tw table{min-width:560px}.grid{grid-template-columns:1fr}.thumbs img{width:56px;height:70px}}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*{transition:none!important;animation:none!important}}

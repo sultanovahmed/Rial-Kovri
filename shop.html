@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ru"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<html lang="ru"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#e99673">
 <title>РИАЛ КОВРЫ</title><link rel="stylesheet" href="shop.css"></head>
 <body>
 <div class="Header"><header>
@@ -29,12 +29,35 @@
   <div style="display:flex;justify-content:space-between;align-items:center"><h2>Корзина</h2><button class="btn gray" id="closeCart">✕</button></div>
   <div class="list" id="cartList"></div>
   <p class="Cost" id="cartTotal"></p>
-  <button class="btn" id="clearCart">Очистить</button>
+  <button class="Buy" id="checkout" style="height:48px;font-size:18px">Оформить заказ</button>
+  <button class="btn gray" id="clearCart">Очистить</button>
 </aside>
 
+<!-- Оформление заказа -->
+<div id="orderModal" class="overlay"><div class="box" style="width:min(440px,94%);margin:6vh auto">
+  <button class="close" style="width:34px;height:34px;font-size:16px" id="orderClose">X</button>
+  <div id="orderForm" style="display:flex;flex-direction:column;gap:10px">
+    <h2>Оформление заказа</h2>
+    <p id="orderSum" style="font-size:14px"></p>
+    <label class="dropbox-label">ФИО<input class="field" id="oName" autocomplete="name" style="width:100%;font-weight:400" placeholder="Иванов Иван Иванович"></label>
+    <label class="dropbox-label">Номер телефона<input class="field" id="oPhone" type="tel" autocomplete="tel" style="width:100%;font-weight:400" placeholder="+7 900 000-00-00"></label>
+    <label style="display:flex;gap:8px;align-items:center;font-size:15px"><input type="checkbox" id="oWa"> Есть WhatsApp на этом номере телефона</label>
+    <label style="display:flex;gap:8px;align-items:center;font-size:15px"><input type="checkbox" id="oMax"> Есть MAX на этом номере телефона</label>
+    <input id="oTrap" tabindex="-1" autocomplete="off" style="position:absolute;left:-9999px" aria-hidden="true">
+    <p id="oErr" style="color:#c0392b;font-size:13px"></p>
+    <button class="Buy" id="oSend" style="height:50px;font-size:20px">Отправить заказ</button>
+    <p style="font-size:12px">Оплата не на сайте: мы свяжемся с вами по указанному номеру и подтвердим заказ.</p>
+  </div>
+  <div id="orderDone" hidden style="text-align:center;display:none;flex-direction:column;gap:12px">
+    <h2 id="doneTitle"></h2><p id="doneText"></p>
+    <button class="btn" id="copyOrder" hidden>Скопировать заказ</button>
+    <button class="btn gray" id="doneClose">Закрыть</button>
+  </div>
+</div></div>
 <div class="alert hidden" id="alertBox"></div>
 
 <script src="common.js"></script>
+<script src="config.js"></script>
 <script>
 const $=id=>document.getElementById(id);
 let products=[],cur=null,idx=0;
@@ -127,6 +150,38 @@ $('closeCart').onclick=()=>drawer.classList.remove('open');
 $('clearCart').onclick=()=>{cart=[];saveCart()};
 function toast(t){const a=$('alertBox');a.textContent=t;a.classList.remove('hidden');clearTimeout(toast.t);toast.t=setTimeout(()=>a.classList.add('hidden'),2500)}
 
+
+/* ---------- оформление заказа ---------- */
+function orderText(){let total=0;const lines=cart.map((x,i)=>{const p=products.find(p=>p.id===x.id);if(!p)return'';total+=p.price*x.count;
+  return `${i+1}. ${p.title} (${sizeOf(p)}) — ${x.count} × ${fmt(p.price)} ₽ = ${fmt(p.price*x.count)} ₽`}).filter(Boolean);return{text:lines.join('\n'),total}}
+const showForm=f=>{$('orderForm').style.display=f?'flex':'none';$('orderDone').style.display=f?'none':'flex'};
+$('checkout').onclick=()=>{
+  if(!cart.length)return toast('Корзина пуста');
+  const o=orderText();$('orderSum').textContent=`Товаров: ${cart.reduce((n,x)=>n+x.count,0)}, сумма: ${fmt(o.total)} ₽`;
+  $('oErr').textContent='';showForm(true);orderModal.classList.add('open');
+};
+const closeOrder=()=>orderModal.classList.remove('open');
+$('orderClose').onclick=$('doneClose').onclick=closeOrder;
+$('oSend').onclick=async()=>{
+  const name=$('oName').value.trim().replace(/\s+/g,' '),phone=$('oPhone').value.trim(),digits=phone.replace(/\D/g,'');
+  if(name.split(' ').length<2||name.length<5)return $('oErr').textContent='Введите фамилию и имя (ФИО)';
+  if(digits.length<10||digits.length>15||!/^[+\d\s()-]+$/.test(phone))return $('oErr').textContent='Введите корректный номер телефона';
+  if(Date.now()-(+localStorage.getItem('lastOrder')||0)<60000)return $('oErr').textContent='Заказ уже отправлен. Подождите минуту.';
+  const o=orderText(),order={name,phone,whatsapp:$('oWa').checked,max:$('oMax').checked,text:o.text,total:fmt(o.total)};
+  $('oErr').textContent='';$('oSend').disabled=true;$('oSend').textContent='Отправляю…';
+  try{
+    if(!$('oTrap').value)await sendOrder(order);     // заполненная скрытая ловушка = бот, молча «успех»
+    localStorage.setItem('lastOrder',Date.now());
+    $('doneTitle').textContent='Заказ отправлен!';$('doneText').textContent='Мы свяжемся с вами по номеру '+phone+'.';$('copyOrder').hidden=true;
+    cart=[];saveCart();drawer.classList.remove('open');
+  }catch(e){
+    $('doneTitle').textContent='Не удалось отправить';
+    $('doneText').textContent='Позвоните нам: '+ORDER_CONFIG.phone+' — или скопируйте заказ и отправьте его любым удобным способом.';
+    $('copyOrder').hidden=false;
+    $('copyOrder').onclick=()=>navigator.clipboard.writeText(`${name}, ${phone}\n${o.text}\nИтого: ${fmt(o.total)} ₽`).then(()=>toast('Скопировано'));
+  }
+  showForm(false);$('oSend').disabled=false;$('oSend').textContent='Отправить заказ';
+};
 async function load(){
   try{products=await (await fetch('data/products.json?t='+Date.now())).json();buildFilters();render();renderCart()}
   catch{$('empty').textContent='Не удалось загрузить каталог. Попробуйте обновить страницу.';$('empty').hidden=false}

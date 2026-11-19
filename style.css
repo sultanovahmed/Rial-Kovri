@@ -140,3 +140,28 @@ footer{ background-color: black; padding: 14px 0; text-align: center; color: #ff
     .banner{ padding-top: 24vh; }
     .post{ margin: 40px 0; }
 }
+
+/* ===== Адаптивность: телефоны, планшеты, ноутбуки, большие экраны ===== */
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
+body{overflow-x:hidden}
+img,iframe{max-width:100%}
+header{padding-top:max(10px,env(safe-area-inset-top));padding-left:max(5%,env(safe-area-inset-left));padding-right:max(5%,env(safe-area-inset-right))}
+nav a{display:inline-flex;align-items:center;min-height:40px}
+.post{max-width:1200px;margin-left:auto;margin-right:auto}
+.cards{max-width:1200px;margin:0 auto}
+@media(pointer:coarse){body{background-attachment:scroll}}           /* на iOS fixed-фон глючит */
+@media(hover:none){.card:hover,.button:hover{transform:none}}
+@media(max-width:900px){.banner{font-size:24px;padding-top:20vh}.MainMap{width:100%;max-width:520px}}
+@media(max-width:600px){
+  html{scroll-padding-top:110px}
+  #start{padding:14px 16px;border-width:4px}
+  .button{display:block;text-align:center;font-size:18px}
+  .post{border-width:4px;padding:28px 5%}
+  .post h2{font-size:26px}
+  #why,#shops{padding:0 4%}
+  .card{width:100%;max-width:340px}
+  .MainMap{padding:12px}.MainMap iframe{height:220px}.MainMap>p{font-size:17px}
+  .title-box{padding:6px 16px;font-size:24px}
+}
+@media(max-height:500px) and (orientation:landscape){.banner{padding-top:110px;padding-bottom:40px}}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*{transition:none!important}}
