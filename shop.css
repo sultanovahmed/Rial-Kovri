@@ -119,4 +119,4 @@ button,.btn,.Buy,.ibtn{touch-action:manipulation}
 /* админка */
 .wrap{width:min(1000px,96%)}
 @media(max-width:600px){.panel{padding:14px}.tw table{min-width:560px}.grid{grid-template-columns:1fr}.thumbs img{width:56px;height:70px}}
-@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*{transition:none!important;animation:none!important}}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}

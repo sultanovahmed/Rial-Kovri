@@ -164,4 +164,4 @@ nav a{display:inline-flex;align-items:center;min-height:40px}
   .title-box{padding:6px 16px;font-size:24px}
 }
 @media(max-height:500px) and (orientation:landscape){.banner{padding-top:110px;padding-bottom:40px}}
-@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*{transition:none!important}}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
