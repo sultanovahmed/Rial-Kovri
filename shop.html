@@ -9,7 +9,6 @@
   </div>
 </header></div>
 
-<div class="search"><input id="q" type="search" placeholder="Поиск: например «серый турция шерсть»"></div>
 <div class="dropboxes" id="filters"></div>
 
 <main><div id="empty" class="empty" hidden>Данных ковров пока что нет. Но у нас есть множество других!</div>
@@ -50,6 +49,8 @@
   </div>
   <div id="orderDone" hidden style="text-align:center;display:none;flex-direction:column;gap:12px">
     <h2 id="doneTitle"></h2><p id="doneText"></p>
+    <a class="btn" id="smsOrder" hidden style="text-decoration:none">Отправить SMS</a>
+    <a class="btn" id="waOrder" hidden target="_blank" rel="noopener" style="text-decoration:none">Написать в WhatsApp</a>
     <button class="btn" id="copyOrder" hidden>Скопировать заказ</button>
     <button class="btn gray" id="doneClose">Закрыть</button>
   </div>
@@ -63,7 +64,7 @@ const $=id=>document.getElementById(id);
 let products=[],cur=null,idx=0;
 const DB={get(k,d){try{return JSON.parse(localStorage.getItem(k))??d}catch{return d}},set(k,v){localStorage.setItem(k,JSON.stringify(v))}};
 let cart=DB.get('cart',[]);            // [{id,count}] — хранится в браузере
-const state={q:'',sort:'pop',size:'all',made:'all',color:'all',pattern:'all'};
+const state={sort:'pop',size:'all',made:'all',color:'all',pattern:'all'};
 
 function saveCart(){DB.set('cart',cart);renderCart()}
 /* ---------- фильтры ---------- */
@@ -82,23 +83,15 @@ function buildFilters(){
       <option value="desc" ${state.sort==='desc'?'selected':''}>Сначала дороже</option></select></div>
     <div style="align-self:end"><button class="btn light" id="reset">Сбросить</button></div>`;
   document.querySelectorAll('[data-k]').forEach(s=>s.onchange=()=>{state[s.dataset.k]=s.value;render()});
-  $('reset').onclick=()=>{Object.assign(state,{q:'',sort:'pop',size:'all',made:'all',color:'all',pattern:'all'});$('q').value='';buildFilters();render()};
+  $('reset').onclick=()=>{Object.assign(state,{sort:'pop',size:'all',made:'all',color:'all',pattern:'all'});buildFilters();render()};
 }
 
-/* ---------- поиск: слова из запроса ищутся по названию и характеристикам ---------- */
-function score(p,words){
-  const hay=(p.title+' '+sizeOf(p)+' '+p.width+' '+p.length+' '+p.made+' '+p.color+' '+p.materials+' '+p.density+' '+(p.pattern?'узор с узором':'без узора')).toLowerCase();
-  return words.reduce((s,w)=>s+(hay.includes(w)?(p.title.toLowerCase().includes(w)?2:1):0),0);
-}
 function visible(){
-  const words=state.q.toLowerCase().split(/\s+/).filter(Boolean);
-  let list=products.filter(p=>
+  const list=products.filter(p=>
     (state.size==='all'||sizeOf(p)===state.size)&&(state.made==='all'||p.made===state.made)&&
-    (state.color==='all'||p.color===state.color)&&(state.pattern==='all'||(state.pattern==='yes')===!!p.pattern))
-    .map(p=>({p,s:words.length?score(p,words):0}));
-  if(words.length)list=list.filter(x=>x.s>0);
-  const by={pop:(a,b)=>(b.p.sales||0)-(a.p.sales||0),asc:(a,b)=>a.p.price-b.p.price,desc:(a,b)=>b.p.price-a.p.price}[state.sort];
-  return list.sort((a,b)=>(b.s-a.s)||by(a,b)).map(x=>x.p);  // сначала самые подходящие, затем по выбранной сортировке
+    (state.color==='all'||p.color===state.color)&&(state.pattern==='all'||(state.pattern==='yes')===!!p.pattern));
+  const by={pop:(a,b)=>(b.sales||0)-(a.sales||0),asc:(a,b)=>a.price-b.price,desc:(a,b)=>b.price-a.price}[state.sort];
+  return list.sort(by);
 }
 function render(){
   const list=visible();
@@ -111,7 +104,6 @@ $('cardsContainer').onclick=e=>{
   const add=e.target.closest('[data-add]');if(add)return addToCart(add.dataset.add);
   const c=e.target.closest('.card');if(c)openModal(c.dataset.id);
 };
-$('q').oninput=e=>{state.q=e.target.value;render()};
 
 /* ---------- модальное окно ---------- */
 const imgs=()=>[cur.image,...(cur.images||[])];
@@ -172,13 +164,16 @@ $('oSend').onclick=async()=>{
   try{
     if(!$('oTrap').value)await sendOrder(order);     // заполненная скрытая ловушка = бот, молча «успех»
     localStorage.setItem('lastOrder',Date.now());
-    $('doneTitle').textContent='Заказ отправлен!';$('doneText').textContent='Мы свяжемся с вами по номеру '+phone+'.';$('copyOrder').hidden=true;
+    $('doneTitle').textContent='Заказ отправлен!';$('doneText').textContent='Мы свяжемся с вами по номеру '+phone+'.';['copyOrder','smsOrder','waOrder'].forEach(i=>$(i).hidden=true);
     cart=[];saveCart();drawer.classList.remove('open');
   }catch(e){
-    $('doneTitle').textContent='Не удалось отправить';
-    $('doneText').textContent='Позвоните нам: '+ORDER_CONFIG.phone+' — или скопируйте заказ и отправьте его любым удобным способом.';
-    $('copyOrder').hidden=false;
-    $('copyOrder').onclick=()=>navigator.clipboard.writeText(`${name}, ${phone}\n${o.text}\nИтого: ${fmt(o.total)} ₽`).then(()=>toast('Скопировано'));
+    const msg=`Заказ с сайта\n${name}, ${phone}\n${o.text}\nИтого: ${fmt(o.total)} ₽`,num=ORDER_CONFIG.smsPhone;
+    $('doneTitle').textContent='Не удалось отправить автоматически';
+    $('doneText').textContent='Отправьте заказ сами одним из способов ниже или позвоните нам: '+ORDER_CONFIG.phone;
+    $('smsOrder').href=`sms:${num}?&body=${encodeURIComponent(msg)}`;
+    $('waOrder').href=`https://wa.me/${num.replace(/\D/g,'')}?text=${encodeURIComponent(msg)}`;
+    ['copyOrder','smsOrder','waOrder'].forEach(i=>$(i).hidden=false);
+    $('copyOrder').onclick=()=>navigator.clipboard.writeText(msg).then(()=>toast('Скопировано'));
   }
   showForm(false);$('oSend').disabled=false;$('oSend').textContent='Отправить заказ';
 };
