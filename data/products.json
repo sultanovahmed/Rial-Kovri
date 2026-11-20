@@ -17,5 +17,24 @@
    "images/mwnjbjcgpuri.jpg",
    "images/mwnjbmq9u5mb.jpg"
   ]
+ },
+ {
+  "id": "p1795191695335",
+  "title": "qwef",
+  "width": "3",
+  "length": "4",
+  "made": "Иран",
+  "color": "Белый",
+  "materials": "asdkmjf",
+  "density": 5000000,
+  "price": 50000000,
+  "pattern": false,
+  "sales": 0,
+  "image": "images/mwp6s0118aop.jpg",
+  "images": [
+   "images/mwp6s2i1ru51.jpg",
+   "images/mwp6s493d33f.jpg",
+   "images/mwp6s6v8uwmt.jpg"
+  ]
  }
 ]
